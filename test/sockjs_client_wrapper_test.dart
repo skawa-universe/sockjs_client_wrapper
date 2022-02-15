@@ -18,7 +18,6 @@ library sockjs_client.test.sockjs_client_test;
 
 import 'dart:async';
 
-import 'package:sockjs_client_wrapper/sockjs_client_wrapper.dart';
 import 'package:test/test.dart';
 
 import 'package:sockjs_client_wrapper/src/client.dart';
@@ -35,47 +34,34 @@ void main() {
       SockJSClient createCorClient() => SockJSClient(_corUri);
       SockJSClient create404Client() => SockJSClient(_fofUri);
 
-      _integrationSuite(
-          'websocket', createEchoClient, createCorClient, create404Client);
+      _integrationSuite('websocket', createEchoClient, createCorClient, create404Client);
     });
 
     group('websocket', () {
       final websocketOptions = SockJSOptions(transports: ['websocket']);
-      SockJSClient createEchoClient() =>
-          SockJSClient(_echoUri, options: websocketOptions);
-      SockJSClient createCorClient() =>
-          SockJSClient(_corUri, options: websocketOptions);
-      SockJSClient create404Client() =>
-          SockJSClient(_fofUri, options: websocketOptions);
+      SockJSClient createEchoClient() => SockJSClient(_echoUri, options: websocketOptions);
+      SockJSClient createCorClient() => SockJSClient(_corUri, options: websocketOptions);
+      SockJSClient create404Client() => SockJSClient(_fofUri, options: websocketOptions);
 
-      _integrationSuite(
-          'websocket', createEchoClient, createCorClient, create404Client);
+      _integrationSuite('websocket', createEchoClient, createCorClient, create404Client);
     });
 
     group('xhr-streaming', () {
       final xhrStreamingOptions = SockJSOptions(transports: ['xhr-streaming']);
-      SockJSClient createEchoClient() =>
-          SockJSClient(_echoUri, options: xhrStreamingOptions);
-      SockJSClient createCorClient() =>
-          SockJSClient(_corUri, options: xhrStreamingOptions);
-      SockJSClient create404Client() =>
-          SockJSClient(_fofUri, options: xhrStreamingOptions);
+      SockJSClient createEchoClient() => SockJSClient(_echoUri, options: xhrStreamingOptions);
+      SockJSClient createCorClient() => SockJSClient(_corUri, options: xhrStreamingOptions);
+      SockJSClient create404Client() => SockJSClient(_fofUri, options: xhrStreamingOptions);
 
-      _integrationSuite(
-          'xhr-streaming', createEchoClient, createCorClient, create404Client);
+      _integrationSuite('xhr-streaming', createEchoClient, createCorClient, create404Client);
     });
 
     group('xhr-polling', () {
       final xhrPollingOptions = SockJSOptions(transports: ['xhr-polling']);
-      SockJSClient createEchoClient() =>
-          SockJSClient(_echoUri, options: xhrPollingOptions);
-      SockJSClient createCorClient() =>
-          SockJSClient(_corUri, options: xhrPollingOptions);
-      SockJSClient create404Client() =>
-          SockJSClient(_fofUri, options: xhrPollingOptions);
+      SockJSClient createEchoClient() => SockJSClient(_echoUri, options: xhrPollingOptions);
+      SockJSClient createCorClient() => SockJSClient(_corUri, options: xhrPollingOptions);
+      SockJSClient create404Client() => SockJSClient(_fofUri, options: xhrPollingOptions);
 
-      _integrationSuite(
-          'xhr-polling', createEchoClient, createCorClient, create404Client);
+      _integrationSuite('xhr-polling', createEchoClient, createCorClient, create404Client);
     });
 
     test('throws if connection fails', () async {
@@ -106,72 +92,74 @@ void _integrationSuite(
   SockJSClient createCorClient(),
   SockJSClient create404Client(),
 ) {
-  SockJSClient client;
+  SockJSClient? client;
 
   tearDown(() async {
-    await client.dispose();
+    await client!.dispose();
     client = null;
   });
 
   test('connecting to a SockJS server', () async {
     client = createEchoClient();
-    expect((await client.onOpen.first).transport, equals(expectedTransport));
+    expect((await client!.onOpen.first).transport, equals(expectedTransport));
   });
 
   test('sending and receiving messages', () async {
     client = createEchoClient();
-    await client.onOpen.first;
+    await client!.onOpen.first;
 
     final c = Completer<Null>();
     final echos = <String>[];
-    client.onMessage.listen((message) {
+    client!.onMessage.listen((message) {
       echos.add(message.data);
       if (echos.length == 2) {
         c.complete();
       }
     });
-    client..send('message1')..send('message2');
+    client!
+      ..send('message1')
+      ..send('message2');
 
     await c.future;
-    client.close();
+    client!.close();
 
     expect(echos, equals(['message1', 'message2']));
   });
 
   test('client closing the connection', () async {
     client = createEchoClient();
-    await client.onOpen.first;
-    client.close();
-    await client.onClose.first;
+    await client!.onOpen.first;
+    client!.close();
+    await client!.onClose.first;
   });
 
   test('client closing the connection with code and reason', () async {
     client = createEchoClient();
-    await client.onOpen.first;
-    client.close(4001, 'Custom close.');
-    final event = await client.onClose.first;
+    await client!.onOpen.first;
+    client!.close(4001, 'Custom close.');
+    final event = await client!.onClose.first;
     expect(event.code, equals(4001));
     expect(event.reason, equals('Custom close.'));
   });
 
   test('server closing the connection', () async {
     client = createCorClient();
-    await client.onOpen.first;
-    client.send('close');
-    await client.onClose.first;
+    await client!.onOpen.first;
+    client!.send('close');
+    await client!.onClose.first;
   });
 
   test('server closing the connection with code and reason', () async {
     client = createCorClient();
-    await client.onOpen.first;
-    client.send('close::4001::Custom close.');
-    final event = await client.onClose.first;
+    await client!.onOpen.first;
+    client!.send('close::4001::Custom close.');
+    final event = await client!.onClose.first;
     expect(event.code, equals(4001));
     expect(event.reason, equals('Custom close.'));
   });
 
   test('handle failed connection', () async {
     client = create404Client();
-    await client.onClose.first;
+    await client!.onClose.first;
   });
 }
